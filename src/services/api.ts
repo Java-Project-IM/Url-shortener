@@ -39,27 +39,54 @@ export interface AnalyticsData {
 }
 
 /**
+ * Generic fetch wrapper with error handling
+ */
+async function fetchWithErrorHandling<T>(
+  url: string,
+  options?: RequestInit
+): Promise<T> {
+  try {
+    const response = await fetch(url, {
+      ...options,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+      },
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || `HTTP error! status: ${response.status}`);
+    }
+
+    return data;
+  } catch (error) {
+    console.error("API Error:", error);
+    throw error;
+  }
+}
+
+/**
  * Shorten a URL
  */
 export async function shortenUrl(
   originalUrl: string
 ): Promise<ShortenUrlResponse> {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/shorten`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ originalUrl }),
-    });
-
-    const data = await response.json();
+    const data = await fetchWithErrorHandling<ShortenUrlResponse>(
+      `${API_BASE_URL}/api/shorten`,
+      {
+        method: "POST",
+        body: JSON.stringify({ originalUrl }),
+      }
+    );
     return data;
   } catch (error) {
-    console.error("Error shortening URL:", error);
     return {
       success: false,
-      error: "Failed to connect to server",
+      error:
+        error instanceof Error ? error.message : "Failed to connect to server",
     };
   }
 }
@@ -69,8 +96,10 @@ export async function shortenUrl(
  */
 export async function getAllUrls(): Promise<UrlData[]> {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/urls`);
-    const data = await response.json();
+    const data = await fetchWithErrorHandling<{
+      success: boolean;
+      data: UrlData[];
+    }>(`${API_BASE_URL}/api/urls`);
     return data.success ? data.data : [];
   } catch (error) {
     console.error("Error fetching URLs:", error);
@@ -85,8 +114,10 @@ export async function getAnalytics(
   shortCode: string
 ): Promise<AnalyticsData | null> {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/analytics/${shortCode}`);
-    const data = await response.json();
+    const data = await fetchWithErrorHandling<{
+      success: boolean;
+      data: AnalyticsData;
+    }>(`${API_BASE_URL}/api/analytics/${shortCode}`);
     return data.success ? data.data : null;
   } catch (error) {
     console.error("Error fetching analytics:", error);
@@ -99,10 +130,12 @@ export async function getAnalytics(
  */
 export async function deleteUrl(shortCode: string): Promise<boolean> {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/urls/${shortCode}`, {
-      method: "DELETE",
-    });
-    const data = await response.json();
+    const data = await fetchWithErrorHandling<{ success: boolean }>(
+      `${API_BASE_URL}/api/urls/${shortCode}`,
+      {
+        method: "DELETE",
+      }
+    );
     return data.success;
   } catch (error) {
     console.error("Error deleting URL:", error);
@@ -115,4 +148,26 @@ export async function deleteUrl(shortCode: string): Promise<boolean> {
  */
 export function copyToClipboard(text: string): Promise<void> {
   return navigator.clipboard.writeText(text);
+}
+
+/**
+ * Check backend health
+ */
+export async function checkHealth(): Promise<{
+  status: string;
+  timestamp: string;
+}> {
+  try {
+    const data = await fetchWithErrorHandling<{
+      status: string;
+      timestamp: string;
+    }>(`${API_BASE_URL}/health`);
+    return data;
+  } catch (error) {
+    console.error("Health check failed:", error);
+    return {
+      status: "ERROR",
+      timestamp: new Date().toISOString(),
+    };
+  }
 }
