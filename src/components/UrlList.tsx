@@ -17,7 +17,14 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Copy, ExternalLink, Trash2, BarChart3, Loader2 } from "lucide-react";
+import {
+  Copy,
+  ExternalLink,
+  Trash2,
+  BarChart3,
+  Loader2,
+  Link2,
+} from "lucide-react";
 import {
   getAllUrls,
   deleteUrl,
@@ -95,15 +102,15 @@ export default function UrlList({
 
   if (loading) {
     return (
-      <Card className="w-full mt-8 shadow-lg">
+      <Card className="w-full mt-8 shadow-xl border-2 dark:border-gray-700">
         <CardHeader>
-          <Skeleton className="h-6 w-48" />
-          <Skeleton className="h-4 w-64 mt-2" />
+          <Skeleton className="h-7 w-56 shimmer" />
+          <Skeleton className="h-4 w-80 mt-2 shimmer" />
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-3">
           {[1, 2, 3].map((i) => (
             <div key={i} className="flex items-center space-x-4">
-              <Skeleton className="h-12 w-full" />
+              <Skeleton className="h-16 w-full shimmer" />
             </div>
           ))}
         </CardContent>
@@ -113,19 +120,25 @@ export default function UrlList({
 
   return (
     <>
-      <Card className="w-full mt-8 shadow-lg hover:shadow-xl transition-shadow duration-300 border-2 dark:border-gray-700">
-        <CardHeader>
-          <CardTitle className="dark:text-white">Your Shortened URLs</CardTitle>
-          <CardDescription>
+      <Card className="w-full mt-8 shadow-xl hover:shadow-2xl transition-all duration-500 border-2 dark:border-gray-700 hover-lift overflow-hidden relative group">
+        {/* Animated gradient border effect */}
+        <div className="absolute inset-0 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 opacity-0 group-hover:opacity-20 transition-opacity duration-500 blur-xl" />
+
+        <CardHeader className="relative z-10">
+          <CardTitle className="dark:text-white text-2xl flex items-center gap-2">
+            <Link2 className="h-6 w-6 animate-float" />
+            Your Shortened URLs
+          </CardTitle>
+          <CardDescription className="text-base">
             Manage and track your shortened links
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="relative z-10">
           {urls.length === 0 ? (
-            <div className="text-center py-12 text-muted-foreground animate-fade-in">
-              <div className="mb-4">
+            <div className="text-center py-16 text-muted-foreground animate-fade-in">
+              <div className="mb-6 relative inline-block">
                 <svg
-                  className="mx-auto h-16 w-16 text-gray-400 dark:text-gray-600"
+                  className="mx-auto h-24 w-24 text-gray-400 dark:text-gray-600 animate-float"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -133,32 +146,35 @@ export default function UrlList({
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
-                    strokeWidth={2}
+                    strokeWidth={1.5}
                     d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"
                   />
                 </svg>
+                <div className="absolute inset-0 bg-blue-500/20 blur-2xl animate-pulse-glow" />
               </div>
-              <p className="text-lg">No URLs yet</p>
-              <p className="text-sm mt-1">
+              <p className="text-xl font-semibold mb-2">No URLs yet</p>
+              <p className="text-base">
                 Create your first shortened URL above!
               </p>
             </div>
           ) : (
-            <div className="rounded-md border dark:border-gray-700 overflow-hidden">
+            <div className="rounded-lg border-2 dark:border-gray-700 overflow-hidden">
               <Table>
                 <TableHeader>
-                  <TableRow className="dark:border-gray-700">
-                    <TableHead className="dark:text-gray-300">
+                  <TableRow className="dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
+                    <TableHead className="dark:text-gray-300 font-semibold">
                       Original URL
                     </TableHead>
-                    <TableHead className="dark:text-gray-300">
+                    <TableHead className="dark:text-gray-300 font-semibold">
                       Short Code
                     </TableHead>
-                    <TableHead className="dark:text-gray-300">Clicks</TableHead>
-                    <TableHead className="dark:text-gray-300">
+                    <TableHead className="dark:text-gray-300 font-semibold">
+                      Clicks
+                    </TableHead>
+                    <TableHead className="dark:text-gray-300 font-semibold">
                       Created
                     </TableHead>
-                    <TableHead className="text-right dark:text-gray-300">
+                    <TableHead className="text-right dark:text-gray-300 font-semibold">
                       Actions
                     </TableHead>
                   </TableRow>
@@ -167,29 +183,31 @@ export default function UrlList({
                   {urls.map((url, index) => (
                     <TableRow
                       key={url._id}
-                      className="animate-fade-in dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors duration-200"
+                      className="stagger-item dark:border-gray-700 hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 dark:hover:from-gray-800 dark:hover:to-gray-700 transition-all duration-300 group/row"
                       style={{ animationDelay: `${index * 50}ms` }}
                     >
-                      <TableCell className="max-w-xs truncate">
+                      <TableCell className="max-w-xs">
                         <a
                           href={url.originalUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1 group"
+                          className="text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-2 group/link transition-all duration-200"
                         >
-                          <span className="truncate">{url.originalUrl}</span>
-                          <ExternalLink className="h-3 w-3 flex-shrink-0 group-hover:scale-110 transition-transform duration-200" />
+                          <span className="truncate font-medium">
+                            {url.originalUrl}
+                          </span>
+                          <ExternalLink className="h-4 w-4 flex-shrink-0 opacity-0 group-hover/link:opacity-100 group-hover/link:scale-110 transition-all duration-200" />
                         </a>
                       </TableCell>
                       <TableCell>
-                        <code className="bg-muted dark:bg-gray-700 px-2 py-1 rounded text-sm dark:text-gray-200">
+                        <code className="bg-gradient-to-r from-blue-100 to-purple-100 dark:from-gray-700 dark:to-gray-600 px-3 py-1.5 rounded-md text-sm dark:text-gray-200 font-mono font-semibold">
                           {url.shortCode}
                         </code>
                       </TableCell>
                       <TableCell>
                         <Badge
                           variant="secondary"
-                          className="animate-pulse-slow dark:bg-gray-700 dark:text-gray-200"
+                          className="animate-pulse-slow dark:bg-gray-700 dark:text-gray-200 font-semibold px-3 py-1"
                         >
                           {url.clicks}
                         </Badge>
@@ -198,13 +216,13 @@ export default function UrlList({
                         {formatDate(url.createdAt)}
                       </TableCell>
                       <TableCell className="text-right">
-                        <div className="flex justify-end gap-1">
+                        <div className="flex justify-end gap-1 opacity-60 group-hover/row:opacity-100 transition-opacity duration-200">
                           <Button
                             size="sm"
                             variant="ghost"
                             onClick={() => handleCopy(url.shortUrl)}
                             title="Copy short URL"
-                            className="hover:scale-110 transition-transform duration-200"
+                            className="hover:scale-110 hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-all duration-200"
                           >
                             <Copy className="h-4 w-4" />
                           </Button>
@@ -213,7 +231,7 @@ export default function UrlList({
                             variant="ghost"
                             onClick={() => onViewAnalytics(url.shortCode)}
                             title="View analytics"
-                            className="hover:scale-110 transition-transform duration-200"
+                            className="hover:scale-110 hover:bg-purple-100 dark:hover:bg-purple-900/30 transition-all duration-200"
                           >
                             <BarChart3 className="h-4 w-4" />
                           </Button>
@@ -241,12 +259,12 @@ export default function UrlList({
       </Card>
 
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent className="dark:bg-gray-900 dark:border-gray-700">
+        <AlertDialogContent className="dark:bg-gray-900 dark:border-gray-700 animate-scale-in">
           <AlertDialogHeader>
-            <AlertDialogTitle className="dark:text-white">
+            <AlertDialogTitle className="dark:text-white text-xl">
               Delete URL?
             </AlertDialogTitle>
-            <AlertDialogDescription className="dark:text-gray-400">
+            <AlertDialogDescription className="dark:text-gray-400 text-base">
               This action cannot be undone. The shortened URL will no longer
               work.
             </AlertDialogDescription>
@@ -254,14 +272,14 @@ export default function UrlList({
           <AlertDialogFooter>
             <AlertDialogCancel
               disabled={deleting}
-              className="dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
+              className="dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700 transition-all duration-200"
             >
               Cancel
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDelete}
               disabled={deleting}
-              className="bg-red-600 hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-800"
+              className="bg-red-600 hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-800 transition-all duration-200"
             >
               {deleting ? (
                 <>
