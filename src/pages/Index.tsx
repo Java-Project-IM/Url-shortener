@@ -68,7 +68,7 @@ export default function Index() {
                 <div className="absolute inset-0 bg-blue-500/20 dark:bg-blue-400/20 blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
               </div>
               <h1 className="text-2xl font-bold gradient-text animate-gradient group-hover:scale-105 transition-transform duration-500">
-                URL Shortener
+                FastLinks
               </h1>
             </div>
             <div className="flex items-center gap-4 animate-fade-in-down animation-delay-200">
@@ -106,7 +106,7 @@ export default function Index() {
             </div>
 
             <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed animate-fade-in-up animation-delay-500 font-medium">
-              A URL shortener demonstrating{" "}
+              FastLinks is a URL shortener demonstrating{" "}
               <span className="text-blue-600 dark:text-blue-400 font-semibold">
                 Hash Maps (O(1) lookups)
               </span>{" "}
