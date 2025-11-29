@@ -24,6 +24,7 @@ import {
   BarChart3,
   Loader2,
   Link2,
+  Check,
 } from "lucide-react";
 import {
   getAllUrls,
@@ -48,21 +49,36 @@ interface UrlListProps {
   onViewAnalytics: (shortCode: string) => void;
 }
 
+const LOCAL_STORAGE_KEY = "shortenedUrls";
+
 export default function UrlList({
   refreshTrigger,
   onViewAnalytics,
 }: UrlListProps) {
-  const [urls, setUrls] = useState<UrlData[]>([]);
+  const [urls, setUrls] = useState<UrlData[]>(() => {
+    const savedUrls = localStorage.getItem(LOCAL_STORAGE_KEY);
+    return savedUrls ? JSON.parse(savedUrls) : [];
+  });
   const [loading, setLoading] = useState(true);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [urlToDelete, setUrlToDelete] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [copiedUrl, setCopiedUrl] = useState<string | null>(null);
 
   const fetchUrls = async () => {
-    setLoading(true);
-    const data = await getAllUrls();
-    setUrls(data);
-    setLoading(false);
+    if (urls.length === 0) {
+      setLoading(true);
+    }
+
+    try {
+      const data = await getAllUrls();
+      setUrls(data);
+      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(data));
+    } catch (error) {
+      toast.error("Failed to fetch URLs.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -73,6 +89,10 @@ export default function UrlList({
     try {
       await copyToClipboard(shortUrl);
       toast.success("Copied to clipboard!");
+      setCopiedUrl(shortUrl);
+      setTimeout(() => {
+        setCopiedUrl(null);
+      }, 2000);
     } catch {
       toast.error("Failed to copy");
     }
@@ -82,17 +102,23 @@ export default function UrlList({
     if (!urlToDelete) return;
 
     setDeleting(true);
-    const success = await deleteUrl(urlToDelete);
-    setDeleting(false);
-
-    if (success) {
-      toast.success("URL deleted successfully");
-      fetchUrls();
-    } else {
-      toast.error("Failed to delete URL");
+    try {
+      const success = await deleteUrl(urlToDelete);
+      if (success) {
+        toast.success("URL deleted successfully");
+        const updatedUrls = urls.filter((url) => url.shortCode !== urlToDelete);
+        setUrls(updatedUrls);
+        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updatedUrls));
+      } else {
+        toast.error("Failed to delete URL");
+      }
+    } catch (error) {
+      toast.error("An unexpected error occurred while deleting the URL.");
+    } finally {
+      setDeleting(false);
+      setDeleteDialogOpen(false);
+      setUrlToDelete(null);
     }
-    setDeleteDialogOpen(false);
-    setUrlToDelete(null);
   };
 
   const formatDate = (dateString: string) => {
@@ -121,7 +147,6 @@ export default function UrlList({
   return (
     <>
       <Card className="w-full mt-8 shadow-xl hover:shadow-2xl transition-all duration-500 border-2 dark:border-gray-700 hover-lift overflow-hidden relative group">
-        {/* Animated gradient border effect */}
         <div className="absolute inset-0 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 opacity-0 group-hover:opacity-20 transition-opacity duration-500 blur-xl" />
 
         <CardHeader className="relative z-10">
@@ -200,9 +225,24 @@ export default function UrlList({
                         </a>
                       </TableCell>
                       <TableCell>
-                        <code className="bg-gradient-to-r from-blue-100 to-purple-100 dark:from-gray-700 dark:to-gray-600 px-3 py-1.5 rounded-md text-sm dark:text-gray-200 font-mono font-semibold">
-                          {url.shortCode}
-                        </code>
+                        <div className="flex items-center gap-2">
+                          <code className="bg-gradient-to-r from-blue-100 to-purple-100 dark:from-gray-700 dark:to-gray-600 px-3 py-1.5 rounded-md text-sm dark:text-gray-200 font-mono font-semibold">
+                            {url.shortCode}
+                          </code>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="p-1 h-auto"
+                            onClick={() => handleCopy(url.shortUrl)}
+                            title="Copy short URL"
+                          >
+                            {copiedUrl === url.shortUrl ? (
+                              <Check className="h-4 w-4 text-green-500" />
+                            ) : (
+                              <Copy className="h-4 w-4" />
+                            )}
+                          </Button>
+                        </div>
                       </TableCell>
                       <TableCell>
                         <Badge
@@ -217,15 +257,6 @@ export default function UrlList({
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-1 opacity-60 group-hover/row:opacity-100 transition-opacity duration-200">
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => handleCopy(url.shortUrl)}
-                            title="Copy short URL"
-                            className="hover:scale-110 hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-all duration-200"
-                          >
-                            <Copy className="h-4 w-4" />
-                          </Button>
                           <Button
                             size="sm"
                             variant="ghost"
