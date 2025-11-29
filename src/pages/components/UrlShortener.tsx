@@ -17,7 +17,7 @@ import {
   AnimatedCheckmark,
   AnimatedCopyIcon,
   AnimatedSpinner,
-} from "@/components/AnimatedSVGs";
+} from "./AnimatedSVGs";
 
 interface UrlShortenerProps {
   onUrlCreated: () => void;
