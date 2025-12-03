@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Card,
   CardContent,
@@ -9,7 +10,16 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Loader2, Link as LinkIcon, Sparkles, X } from "lucide-react";
+import {
+  Loader2,
+  Link as LinkIcon,
+  Sparkles,
+  X,
+  ChevronDown,
+  ChevronUp,
+  Calendar,
+  Tag,
+} from "lucide-react";
 import { shortenUrl, copyToClipboard } from "@/services/api";
 import { toast } from "sonner";
 import {
@@ -31,6 +41,9 @@ export default function UrlShortener({ onUrlCreated }: UrlShortenerProps) {
     originalUrl: string;
   } | null>(null);
   const [copied, setCopied] = useState(false);
+  const [showAdvanced, setShowAdvanced] = useState(false);
+  const [expiresAt, setExpiresAt] = useState("");
+  const [category, setCategory] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -58,7 +71,11 @@ export default function UrlShortener({ onUrlCreated }: UrlShortenerProps) {
     setResult(null);
 
     try {
-      const response = await shortenUrl(url);
+      const response = await shortenUrl(
+        url,
+        expiresAt || undefined,
+        category || undefined
+      );
 
       if (response.success && response.data) {
         setResult({
@@ -66,6 +83,8 @@ export default function UrlShortener({ onUrlCreated }: UrlShortenerProps) {
           originalUrl: response.data.originalUrl,
         });
         setUrl("");
+        setExpiresAt("");
+        setCategory("");
         toast.success("URL shortened successfully!", {
           description: "Your shortened link is ready to use",
         });
@@ -155,6 +174,71 @@ export default function UrlShortener({ onUrlCreated }: UrlShortenerProps) {
               <div className="absolute inset-0 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 opacity-0 group-hover/btn:opacity-100 transition-opacity duration-300" />
             </Button>
           </div>
+
+          {/* Advanced Options Toggle */}
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => setShowAdvanced(!showAdvanced)}
+            className="text-muted-foreground hover:text-foreground transition-colors"
+          >
+            {showAdvanced ? (
+              <ChevronUp className="h-4 w-4 mr-1" />
+            ) : (
+              <ChevronDown className="h-4 w-4 mr-1" />
+            )}
+            {showAdvanced ? "Hide" : "Show"} Advanced Options
+          </Button>
+
+          {/* Advanced Options */}
+          {showAdvanced && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg animate-fade-in">
+              <div className="space-y-2">
+                <Label
+                  htmlFor="expiresAt"
+                  className="flex items-center gap-2 text-sm font-medium"
+                >
+                  <Calendar className="h-4 w-4" />
+                  Link Expiration
+                </Label>
+                <Input
+                  id="expiresAt"
+                  type="date"
+                  value={expiresAt}
+                  onChange={(e) => setExpiresAt(e.target.value)}
+                  disabled={loading}
+                  min={new Date().toISOString().split("T")[0]}
+                  className="h-10"
+                  placeholder="Optional"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Link will stop working after this date
+                </p>
+              </div>
+              <div className="space-y-2">
+                <Label
+                  htmlFor="category"
+                  className="flex items-center gap-2 text-sm font-medium"
+                >
+                  <Tag className="h-4 w-4" />
+                  Category
+                </Label>
+                <Input
+                  id="category"
+                  type="text"
+                  value={category}
+                  onChange={(e) => setCategory(e.target.value)}
+                  disabled={loading}
+                  placeholder="e.g., marketing, social"
+                  className="h-10"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Group links for easy filtering
+                </p>
+              </div>
+            </div>
+          )}
 
           {loading && (
             <div className="flex justify-center py-4 animate-fade-in">
